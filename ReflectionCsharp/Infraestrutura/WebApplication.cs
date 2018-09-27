@@ -22,7 +22,7 @@ namespace ReflectionCsharp.Infraestrutura
 		/// <param name="prefixos"></param>
 		public WebApplication(string[] prefixos)
 		{
-			if (_prefixos == null)
+			if (prefixos == null)
 				throw new ArgumentNullException(nameof(prefixos));
 			_prefixos = prefixos;
 		}
@@ -44,7 +44,32 @@ namespace ReflectionCsharp.Infraestrutura
 			httpListener.Start();
 
 			//travar a aplicação até que tenha um contexto de uma requisição
+			var contexto = httpListener.GetContext();
+
+			//Após obter o contexto vamos ter 2 objetos um a requisição e outro a response
+			var requisicao = contexto.Request;
+			var resposta = contexto.Response;
+
+			//Respost para o cliente
+			var respostaTexto = "Hello World";
 			
+			//o body da requisição é do tipo Stream e para isso temos que converter o texto em um sequencia de bytes
+			var respostaConteudoBytes = Encoding.UTF8.GetBytes(respostaTexto);		
+
+			//Definir o tipo do conteudo que sera retornado
+			resposta.ContentType = "text/html; charset=utf-8";
+			//definir o código de resposta do HTTP
+			resposta.StatusCode = 200;
+			//tamanho da resposta, como a resposta é gerado um array de bytes, vamos ver o tamnho de posição
+			resposta.ContentLength64 = respostaConteudoBytes.Length;
+			//O body da requisição só aceita stram e para escrever nele temos que usar alguns recursos
+			//Ele espera 3 parametro, o primeiro é o array de bytes, o segundo é de qual array vai ser iniciado e o terceiro até qual array vai ser escrito
+			//Ou seja, temos o tamanho de array que vai ser escrito
+			resposta.OutputStream.Write(respostaConteudoBytes, 0, respostaConteudoBytes.Length);
+			//Fechar o escritor do stream
+			resposta.OutputStream.Close();
+			//A requisição foi finalizada, vamos pausar o httpListener
+			httpListener.Stop();
 		}
 	}
 }

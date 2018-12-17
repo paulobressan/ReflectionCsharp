@@ -4,5 +4,8 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
-
+  <ItemGroup>
+    <EmbeddedResource Include="Assets/css/styles.css" />
+    <EmbeddedResource Include="Assets/js/main.js" />
+  </ItemGroup>
 </Project>

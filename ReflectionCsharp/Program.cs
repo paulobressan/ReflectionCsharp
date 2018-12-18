@@ -13,7 +13,6 @@ namespace ReflectionCsharp
 			};
 			var webApplication = new WebApplication(prefixos);
 			webApplication.Iniciar();
-            Console.WriteLine("Hello World!");
         }
     }
 }

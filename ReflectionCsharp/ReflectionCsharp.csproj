@@ -7,5 +7,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Assets/css/styles.css" />
     <EmbeddedResource Include="Assets/js/main.js" />
+    <EmbeddedResource Include="View/Cambio/MXN.html" />
+    <EmbeddedResource Include="View/Cambio/USD.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ReflectionCsharp.Service\ReflectionCsharp.Service.csproj" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ReflectionCsharp.Controller;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -33,11 +34,11 @@ namespace ReflectionCsharp.Infraestrutura
         /// </summary>
         public void Iniciar()
         {
-			while (true)
-			{
-				//Manipular valores
-				ManipularRequisicao();
-			}
+            while (true)
+            {
+                //Manipular valores
+                ManipularRequisicao();
+            }
         }
 
         private void ManipularRequisicao()
@@ -60,102 +61,40 @@ namespace ReflectionCsharp.Infraestrutura
             var requisicao = contexto.Request;
             var resposta = contexto.Response;
 
-            //Respost para o cliente
-            //var respostaTexto = "Hello World";
-
             //Retornando os arquivos css e js
             //O AbsolutePath é a url da requisição porem sem o prefixo /Assets/css/styles.css
             var path = requisicao.Url.AbsolutePath;
-            if (path == "/Assets/css/styles.css")
+            //Se for requisitado um arquivo que na url contem a extenção vamos retorna-lo
+            //Se não é uma pagina html e temos que chamar um controller
+            if (Utilidades.EhArquivo(path))
             {
-                //O assembly é o contexto da aplicação com todos os arquivos.
-                //O metodo GetExecutingAssembly captura o assembly atual em execução
-                //O retorno desse metodo é um objeto que representa o contexto da aplicação 
-                var assembly = Assembly.GetExecutingAssembly();
-                //Nome do recurso, nome do arquivo presente no contexo da aplicação
-                //Para acessar um arquivo temos que usar o caminho de assembly que segue o padrão
-                //Solution.Namespace.Arquivo
-                var recurso = "ReflectionCsharp.Assets.css.styles.css";
-                //O Styles.css é um arquivo pequeno então não é necessario preocupar com o seu tamanho.
-                /**
-				O stream é o fluxo de manipulação de bytes em uma aplicação, 
-				quando é necessário trabalhar com arquivos muito grande ou até arquivos pequenos, 
-				usamos steam para tornar manipular esse arquivo em pequenos pedaços, isso é feito
-				pelo motivo de que podemos trabalhar com arquivo em que não sabemos o seu tamanho
-				e para isso é necessário o uso de Stream. Cada variável criada em memória é um 
-				balde de bytes onde nele está o valor da variável, quando a variável recebe
-				valores pequenos, não vai ter problemas porém se a variável recebe um valor 
-				maior isso vai exigir muito recurso tornando a aplicação lenta, para isso o 
-				Stream entra para manipular esse arquivos, como se fosse uma mangueira nesse 
-				balde pegando somente o fluxo, ou seja pequenos pedaços dos bytes tornando a 
-				aplicação rápida.
-				 */
-                var recursoStream = assembly.GetManifestResourceStream(recurso);
-                //Criando um balde com o tamanho do recursoStream (styles.css)
-                var bytesRecurso = new Byte[recursoStream.Length];
-                //Como sabemos que o styles.css é pequenos, poremos ler completo, iniciando do 0
-                //O primeiro parametro é o buffer, ou seja o balde onde vai ser armazenado os dados
-                //O segundo é como vai ser canalizado esses bytes, no caso vamos carregar tudo de uma vez
-                //E o ultimo é onde termina o array de bytes
-                recursoStream.Read(bytesRecurso, 0, (int)recursoStream.Length);
-
-                //RESPONDENDO O STREAM
-                //Definir o tipo do conteudo que sera retornado
-                resposta.ContentType = "text/css; charset=utf-8";
-                //definir o código de resposta do HTTP
+                var manipulador = new ManipuladorRequisicaoArquivo();
+                manipulador.Manipular(resposta, path);
+            }
+            else if(path == "/Cambio/MXN")
+            {
+                //Instanciando o controller para pegar o conteudo do metodo MXN
+                var controller = new CambioController();
+                var paginaConteudo = controller.MXN();
                 resposta.StatusCode = 200;
-                //tamanho da resposta, como a resposta é gerado um array de bytes, vamos ver o tamnho de posição
-                resposta.ContentLength64 = recursoStream.Length;
-                //O body da requisição só aceita stream e para escrever nele temos que usar alguns recursos
-                //Ele espera 3 parametro, o primeiro é o array de bytes, o segundo é de qual array vai ser iniciado e o terceiro até qual array vai ser escrito
-                //Ou seja, temos o tamanho de array que vai ser escrito
-                resposta.OutputStream.Write(bytesRecurso, 0, bytesRecurso.Length);
-                //Fechar o escritor do stream
+                resposta.ContentType = "text/html charset=utf-8";
+                //Transformar o conteudo da pagina em um buffer(array de bytes)
+                var bufferArquivo = Encoding.UTF8.GetBytes(paginaConteudo);
+                //Colocar no body da resposta os bytes do conteudo
+                resposta.OutputStream.Write(bufferArquivo, 0, bufferArquivo.Length);
                 resposta.OutputStream.Close();
             }
-            else if (path == "/Assets/js/main.js")
+            else if (path == "/Cambio/USD")
             {
-                //O assembly é o contexto da aplicação com todos os arquivos.
-                //O metodo GetExecutingAssembly captura o assembly atual em execução
-                //O retorno desse metodo é um objeto que representa o contexto da aplicação 
-                var assembly = Assembly.GetExecutingAssembly();
-                //Nome do recurso, nome do arquivo presente no contexo da aplicação
-                var recurso = "ReflectionCsharp.Assets.js.main.js";
-                //O Styles.css é um arquivo pequeno então não é necessario preocupar com o seu tamanho.
-                /**
-				O stream é o fluxo de manipulação de bytes em uma aplicação, 
-				quando é necessário trabalhar com arquivos muito grande ou até arquivos pequenos, 
-				usamos steam para tornar manipular esse arquivo em pequenos pedaços, isso é feito
-				pelo motivo de que podemos trabalhar com arquivo em que não sabemos o seu tamanho
-				e para isso é necessário o uso de Stream. Cada variável criada em memória é um 
-				balde de bytes onde nele está o valor da variável, quando a variável recebe
-				valores pequenos, não vai ter problemas porém se a variável recebe um valor 
-				maior isso vai exigir muito recurso tornando a aplicação lenta, para isso o 
-				Stream entra para manipular esse arquivos, como se fosse uma mangueira nesse 
-				balde pegando somente o fluxo, ou seja pequenos pedaços dos bytes tornando a 
-				aplicação rápida.
-				 */
-                var recursoStream = assembly.GetManifestResourceStream(recurso);
-                //Criando um balde com o tamanho do recursoStream (styles.css)
-                var bytesRecurso = new Byte[recursoStream.Length];
-                //Como sabemos que o styles.css é pequenos, poremos ler completo, iniciando do 0
-                //O primeiro parametro é o buffer, ou seja o balde onde vai ser armazenado os dados
-                //O segundo é como vai ser canalizado esses bytes, no caso vamos carregar tudo de uma vez
-                //E o ultimo é onde termina o array de bytes
-                recursoStream.Read(bytesRecurso, 0, (int)recursoStream.Length);
-
-                //RESPONDENDO O STREAM
-                //Definir o tipo do conteudo que sera retornado
-                resposta.ContentType = "application/js; charset=utf-8";
-                //definir o código de resposta do HTTP
+                //Instanciando o controller para pegar o conteudo do metodo MXN
+                var controller = new CambioController();
+                var paginaConteudo = controller.USD();
                 resposta.StatusCode = 200;
-                //tamanho da resposta, como a resposta é gerado um array de bytes, vamos ver o tamnho de posição
-                resposta.ContentLength64 = recursoStream.Length;
-                //O body da requisição só aceita stream e para escrever nele temos que usar alguns recursos
-                //Ele espera 3 parametro, o primeiro é o array de bytes, o segundo é de qual array vai ser iniciado e o terceiro até qual array vai ser escrito
-                //Ou seja, temos o tamanho de array que vai ser escrito
-                resposta.OutputStream.Write(bytesRecurso, 0, bytesRecurso.Length);
-                //Fechar o escritor do stream
+                resposta.ContentType = "text/html charset=utf-8";
+                //Transformar o conteudo da pagina em um buffer(array de bytes)
+                var bufferArquivo = Encoding.UTF8.GetBytes(paginaConteudo);
+                //Colocar no body da resposta os bytes do conteudo
+                resposta.OutputStream.Write(bufferArquivo, 0, bufferArquivo.Length);
                 resposta.OutputStream.Close();
             }
 
